@@ -1,0 +1,16 @@
+version: '3.7'
+services:
+  postgres:
+    image: postgres
+    container_name: postgres_db
+    ports:
+      - '5433:5432'
+
+    environment:
+      POSTGRES_DB: school_system
+      POSTGRES_USER: psql
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+volumes:
+  postgres_data:
