@@ -6,28 +6,43 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/users.entity';
 import { Like, Repository } from 'typeorm';
-import { CreateUserDto } from './dtos/create-user.dto';
 import { PaginationDto } from './dtos/pagination.dto';
 import { PaginationResult } from './interfaces/pagination-result.interface';
-import { catchError } from 'src/utils';
+import { Crypt } from 'src/utils';
+import { CreateUserManagerDto } from './dtos';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private crypt: Crypt,
   ) {}
 
-  async createUser(createUserDto: CreateUserDto) /*: Promise<Partial<User>>*/ {
+  /**
+   * @access Manager
+   */
+  async createUser(createUserManagerDto: any): Promise<Partial<User>> {
+    const { password } = createUserManagerDto;
+    const hashPassword = this.crypt.hash(password);
+    delete createUserManagerDto.password;
+
+    console.log(createUserManagerDto);
+
     const user = await this.userRepository.save(
-      this.userRepository.create(createUserDto),
+      this.userRepository.create({
+        password: hashPassword,
+        ...createUserManagerDto,
+      }),
     );
+    console.log(user);
+
     if (!user) throw new BadRequestException();
     return this.removeSensitiveUserFields(user);
   }
 
   /**
-   * @access User
+   * @access All
    */
   async getUser(userId: number): Promise<User> {
     const user = await this.userRepository.findOne({
@@ -50,7 +65,7 @@ export class UsersService {
   }
 
   /**
-   * @access User
+   * @access Manager
    */
   async getUsers(
     paginationDto: PaginationDto,

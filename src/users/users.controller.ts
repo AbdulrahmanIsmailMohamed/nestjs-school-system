@@ -10,26 +10,32 @@ import {
   Post,
   Query,
   Request,
+  UseGuards,
   //   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dtos/create-user.dto';
 import { User } from './entities/users.entity';
 import { PaginationDto } from './dtos/pagination.dto';
 import { PaginationResult } from './interfaces/pagination-result.interface';
+import { RolesGuard } from 'src/auth/guards';
+import { Roles } from 'src/auth/decorators';
+import { Role } from 'src/common/enums/role.enum';
+import { CreateUserManagerDto } from './dtos';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
-  //   @UseGuards(RolesGuard)
-  //   @Roles(Role.ADMIN)
+  @UseGuards(RolesGuard)
+  @Roles(Role.MANAGER)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async createUser(
-    @Body() createUserDto: CreateUserDto,
-  ) /*: Promise<Partial<User>>*/ {
-    const user = await this.userService.createUser(createUserDto);
+    @Body() createUserManagerDto: CreateUserManagerDto,
+  ): Promise<Partial<User>> {
+    console.log(createUserManagerDto);
+
+    const user = await this.userService.createUser(createUserManagerDto);
     if (!user) throw new BadRequestException(`occur error while save user`);
     return user;
   }
@@ -41,6 +47,8 @@ export class UsersController {
     return await this.userService.getUser(req.user.id);
   }
 
+  @UseGuards(RolesGuard)
+  @Roles(Role.MANAGER, Role.TEACHER)
   @Get()
   async getUsers(
     @Query() paginationDto: PaginationDto,
@@ -52,6 +60,8 @@ export class UsersController {
     return users;
   }
 
+  @UseGuards(RolesGuard)
+  @Roles(Role.MANAGER, Role.TEACHER, Role.STUDENT)
   @Get(':id')
   async getUser(@Param('id') id: number): Promise<User> {
     const user = await this.userService.getUser(id);
