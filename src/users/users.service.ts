@@ -5,11 +5,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/users.entity';
-import { Like, Repository } from 'typeorm';
+import { Like, Not, Repository } from 'typeorm';
 import { PaginationDto } from './dtos/pagination.dto';
 import { PaginationResult } from './interfaces/pagination-result.interface';
 import { Crypt } from 'src/utils';
-import { CreateUserManagerDto } from './dtos';
+import { CreateUserDto } from './dtos';
+import { Filters } from './interfaces';
 
 @Injectable()
 export class UsersService {
@@ -20,33 +21,51 @@ export class UsersService {
   ) {}
 
   /**
-   * @access Manager
+   * @access Manager, Teacher
    */
-  async createUser(createUserManagerDto: any): Promise<Partial<User>> {
-    const { password } = createUserManagerDto;
-    const hashPassword = this.crypt.hash(password);
-    delete createUserManagerDto.password;
+  async createUser(createUserDto: CreateUserDto): Promise<Partial<User>> {
+    const { password, username, email } = createUserDto;
 
-    console.log(createUserManagerDto);
+    // Check if username or email already exist
+    const existingUser = await this.userRepository.findOne({
+      where: [{ username }, { email }],
+    });
+    if (existingUser) {
+      throw new BadRequestException('Email or username already exists');
+    }
+
+    const hashPassword = this.crypt.hash(password);
+    delete createUserDto.password;
 
     const user = await this.userRepository.save(
       this.userRepository.create({
         password: hashPassword,
-        ...createUserManagerDto,
+        ...createUserDto,
       }),
     );
-    console.log(user);
-
     if (!user) throw new BadRequestException();
+
     return this.removeSensitiveUserFields(user);
   }
 
   /**
-   * @access All
+   * @access manager, student, teacher
+   */
+  async getMe(userId: number): Promise<Partial<User>> {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException(`${userId} not found`);
+    }
+
+    return this.removeSensitiveUserFields(user);
+  }
+
+  /**
+   * @access manager, student, teacher
    */
   async getUser(userId: number): Promise<User> {
     const user = await this.userRepository.findOne({
-      where: { id: userId },
+      where: { id: userId, role: Not('manager') },
       select: {
         id: true,
         username: true,
@@ -83,10 +102,8 @@ export class UsersService {
     const skip = (page - 1) * limit;
     const endIndex: number = page * limit;
 
-    let filters = {};
-    if (keyword) filters = { username: Like(`${keyword}`), active: true };
-
-    console.log(filters);
+    const filters: Filters = { active: true, role: Not('manager') };
+    if (keyword) filters.username = Like(`${keyword}`);
 
     const users = await this.userRepository.find({
       where: filters,
@@ -107,7 +124,6 @@ export class UsersService {
     const countDocumnet = await this.userRepository.count({
       where: filters,
     });
-
     const paginationResult: PaginationResult = {
       data: users,
       page,
@@ -121,9 +137,13 @@ export class UsersService {
 
   private removeSensitiveUserFields(user: any): Partial<User> {
     const userSenitize: Partial<User> = {
+      id: user.id,
       username: user.username,
       email: user.email,
       country: user.country,
+      city: user.city,
+      profileImage: user.profileImage,
+      profileImages: user.profileImages,
     };
 
     return userSenitize;

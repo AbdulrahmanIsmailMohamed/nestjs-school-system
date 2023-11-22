@@ -20,31 +20,24 @@ import { PaginationResult } from './interfaces/pagination-result.interface';
 import { RolesGuard } from 'src/auth/guards';
 import { Roles } from 'src/auth/decorators';
 import { Role } from 'src/common/enums/role.enum';
-import { CreateUserManagerDto } from './dtos';
+import { CreateUserDto } from './dtos';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
   @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER)
+  @Roles(Role.MANAGER, Role.TEACHER)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async createUser(
-    @Body() createUserManagerDto: CreateUserManagerDto,
+    @Body() createUserDto: CreateUserDto,
   ): Promise<Partial<User>> {
-    console.log(createUserManagerDto);
+    console.log(createUserDto);
 
-    const user = await this.userService.createUser(createUserManagerDto);
+    const user = await this.userService.createUser(createUserDto);
     if (!user) throw new BadRequestException(`occur error while save user`);
     return user;
-  }
-
-  @Get('me')
-  async getMe(@Request() req): Promise<User> {
-    console.log(req.user);
-
-    return await this.userService.getUser(req.user.id);
   }
 
   @UseGuards(RolesGuard)
@@ -61,10 +54,22 @@ export class UsersController {
   }
 
   @UseGuards(RolesGuard)
+  @Roles(Role.MANAGER, Role.TEACHER, Role.STUDENT, Role.GUARDIAN)
+  @Get('me')
+  async getMe(@Request() req): Promise<Partial<User>> {
+    const user = await this.userService.getMe(req.user.id);
+    if (!user) throw new NotFoundException();
+
+    return user;
+  }
+
+  @UseGuards(RolesGuard)
   @Roles(Role.MANAGER, Role.TEACHER, Role.STUDENT)
   @Get(':id')
-  async getUser(@Param('id') id: number): Promise<User> {
-    const user = await this.userService.getUser(id);
+  async getUser(@Request() req, @Param('id') id: number): Promise<User> {
+    const userId = id || req.user.id;
+
+    const user = await this.userService.getUser(userId);
     if (!user) throw new NotFoundException();
 
     return user;
