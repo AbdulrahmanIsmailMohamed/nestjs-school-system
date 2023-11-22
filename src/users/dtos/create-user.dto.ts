@@ -3,11 +3,13 @@ import {
   IsNotEmpty,
   IsString,
   IsStrongPassword,
+  Length,
 } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
+  @Length(2, 150)
   username: string;
 
   @IsString()

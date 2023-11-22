@@ -1,8 +1,7 @@
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { CreateUserDto } from './create-user.dto';
 import { Role } from 'src/common/enums/role.enum';
 
-export class CreateUserManagerDto extends CreateUserDto {
+export class UpdateRoleOfUserDto {
   @IsString()
   @IsOptional()
   @IsNotEmpty()

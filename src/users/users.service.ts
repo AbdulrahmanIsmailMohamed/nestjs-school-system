@@ -9,7 +9,7 @@ import { Like, Not, Repository } from 'typeorm';
 import { PaginationDto } from './dtos/pagination.dto';
 import { PaginationResult } from './interfaces/pagination-result.interface';
 import { Crypt } from 'src/utils';
-import { CreateUserDto } from './dtos';
+import { CreateUserDto, UpdateLoggedUserDto } from './dtos';
 import { Filters } from './interfaces';
 
 @Injectable()
@@ -84,7 +84,7 @@ export class UsersService {
   }
 
   /**
-   * @access Manager
+   * @access Manager Teacher
    */
   async getUsers(
     paginationDto: PaginationDto,
@@ -94,6 +94,49 @@ export class UsersService {
     if (!users) throw new NotFoundException();
 
     return users;
+  }
+
+  async updateLoggedUser(
+    userId: number,
+    updateLoggedUserDto: UpdateLoggedUserDto,
+  ) {
+    const user = await this.userRepository.update(
+      { id: userId },
+      updateLoggedUserDto,
+    );
+    if (user.affected === 0) throw new BadRequestException();
+
+    return 'Done';
+  }
+
+  /**
+   * @access Manager
+   */
+  async updateRoleOfUser(userId: number, role: any): Promise<string> {
+    const user = await this.userRepository.update({ id: userId }, role);
+    if (user.affected === 0) throw new NotFoundException();
+
+    return 'Done';
+  }
+
+  /**
+   * @access Manager
+   */
+  async deleteUser(userId: number): Promise<string> {
+    const user = await this.userRepository.delete({ id: userId });
+    if (user.affected === 0) throw new NotFoundException();
+
+    return 'done';
+  }
+
+  async inactiveUser(userId: number): Promise<string> {
+    const user = await this.userRepository.update(
+      { id: userId },
+      { active: false },
+    );
+    if (user.affected === 0) throw new NotFoundException();
+
+    return 'Done';
   }
 
   private async paginate(paginationDto: PaginationDto, keyword: string) {

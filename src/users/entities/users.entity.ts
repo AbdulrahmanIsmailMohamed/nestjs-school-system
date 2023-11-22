@@ -23,7 +23,7 @@ export class User {
   @Column({ nullable: true })
   passwordResetVerified: boolean;
 
-  @Column('simple-array', { default: 'user' })
+  @Column('simple-array', { default: 'student' })
   role: Array<string>;
 
   @Column({ default: false, nullable: true })
