@@ -12,7 +12,9 @@ import {
   Post,
   Query,
   Request,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './entities/users.entity';
@@ -22,6 +24,7 @@ import { Role } from 'src/common/enums/role.enum';
 import { CreateUserDto, PaginationDto, UpdateRoleOfUserDto } from './dtos';
 import { AuthenticatedRequest, PaginationResult } from './interfaces';
 import { UpdateLoggedUserDto } from './dtos/update-logged-user.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('users')
 export class UsersController {
@@ -66,18 +69,28 @@ export class UsersController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.MANAGER, Role.TEACHER, Role.STUDENT, Role.GUARDIAN)
+  @UseInterceptors(FileInterceptor('profileImage'))
   @Patch('me')
   async updateLoggedUser(
     @Request() req: AuthenticatedRequest,
     @Body() updateLoggedUserDto: UpdateLoggedUserDto,
+    @UploadedFile() profileImage: Express.Multer.File,
   ): Promise<string> {
     const user = await this.userService.updateLoggedUser(
       req.user.id,
       updateLoggedUserDto,
+      profileImage,
     );
+
     if (!user) throw new BadRequestException();
 
     return user;
+  }
+
+  @Post('upload')
+  uploadFile(@UploadedFile() file: Express.Multer.File) {
+    console.log(file);
+    return 'hi';
   }
 
   @UseGuards(RolesGuard)

@@ -11,6 +11,7 @@ import { PaginationResult } from './interfaces/pagination-result.interface';
 import { Crypt } from 'src/utils';
 import { CreateUserDto, UpdateLoggedUserDto } from './dtos';
 import { Filters } from './interfaces';
+import cloudinary from 'src/config/cloudinary.config';
 
 @Injectable()
 export class UsersService {
@@ -99,7 +100,18 @@ export class UsersService {
   async updateLoggedUser(
     userId: number,
     updateLoggedUserDto: UpdateLoggedUserDto,
+    profileImage: Express.Multer.File,
   ) {
+    if (profileImage) {
+      const { url } = await cloudinary.uploader.upload(profileImage.path, {
+        folder: 'school_system/profiles_Images',
+        format: 'jpg',
+        public_id: `${Date.now()}-profile`,
+      });
+      console.log(url);
+      updateLoggedUserDto.profileImage = url;
+    }
+
     const user = await this.userRepository.update(
       { id: userId },
       updateLoggedUserDto,
