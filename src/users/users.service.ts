@@ -11,7 +11,7 @@ import { PaginationResult } from './interfaces/pagination-result.interface';
 import { Crypt } from 'src/utils';
 import { CreateUserDto, UpdateLoggedUserDto } from './dtos';
 import { Filters } from './interfaces';
-import cloudinary from 'src/config/cloudinary.config';
+import { v2 as cloudinary } from 'cloudinary';
 
 @Injectable()
 export class UsersService {
@@ -101,22 +101,23 @@ export class UsersService {
     userId: number,
     updateLoggedUserDto: UpdateLoggedUserDto,
     profileImage: Express.Multer.File,
-  ) {
+  ): Promise<Partial<User> | 'Done'> {
     if (profileImage) {
-      const { url } = await cloudinary.uploader.upload(profileImage.path, {
-        folder: 'school_system/profiles_Images',
-        format: 'jpg',
-        public_id: `${Date.now()}-profile`,
-      });
-      console.log(url);
-      updateLoggedUserDto.profileImage = url;
+      return await this.uploadProfileImage(
+        userId,
+        profileImage,
+        updateLoggedUserDto,
+      );
     }
 
-    const user = await this.userRepository.update(
+    const result = await this.userRepository.update(
       { id: userId },
       updateLoggedUserDto,
     );
-    if (user.affected === 0) throw new BadRequestException();
+
+    if (result.affected === 0) {
+      throw new BadRequestException();
+    }
 
     return 'Done';
   }
@@ -202,5 +203,43 @@ export class UsersService {
     };
 
     return userSenitize;
+  }
+
+  private async uploadProfileImage(
+    userId: number,
+    profileImage: Express.Multer.File,
+    updateLoggedUserDto: UpdateLoggedUserDto,
+  ): Promise<Partial<User>> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        country: true,
+        city: true,
+        profileImage: true,
+        profileImages: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException();
+    }
+
+    const { url } = await cloudinary.uploader.upload(profileImage.path, {
+      folder: 'school_system/profiles_Images',
+      format: 'jpg',
+      public_id: `${Date.now()}-profile`,
+    });
+
+    user.country = updateLoggedUserDto.country;
+    user.city = updateLoggedUserDto.city;
+    user.profileImage = url;
+    // Initialize profileImages as an empty array if it's null
+    user.profileImages = user.profileImages || [];
+    user.profileImages.push(url);
+
+    await user.save();
+    return this.removeSensitiveUserFields(user);
   }
 }

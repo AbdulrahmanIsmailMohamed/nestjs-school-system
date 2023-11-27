@@ -5,6 +5,9 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards';
+import { v2 } from 'cloudinary';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Module({
   imports: [
@@ -17,6 +20,15 @@ import { JwtAuthGuard } from './auth/guards';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: 'Cloudinary',
+      useFactory: () =>
+        v2.config({
+          cloud_name: process.env.CLOUDINARY_NAME,
+          api_key: process.env.CLOUDINARY_KEY,
+          api_secret: process.env.CLOUDINARY_SECRET,
+        }),
     },
   ],
 })

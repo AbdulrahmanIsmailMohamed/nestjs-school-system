@@ -75,7 +75,7 @@ export class UsersController {
     @Request() req: AuthenticatedRequest,
     @Body() updateLoggedUserDto: UpdateLoggedUserDto,
     @UploadedFile() profileImage: Express.Multer.File,
-  ): Promise<string> {
+  ) /*: Promise<string | User>*/ {
     const user = await this.userService.updateLoggedUser(
       req.user.id,
       updateLoggedUserDto,
