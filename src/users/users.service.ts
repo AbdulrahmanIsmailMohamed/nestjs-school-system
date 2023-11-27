@@ -235,6 +235,7 @@ export class UsersService {
     user.country = updateLoggedUserDto.country;
     user.city = updateLoggedUserDto.city;
     user.profileImage = url;
+
     // Initialize profileImages as an empty array if it's null
     user.profileImages = user.profileImages || [];
     user.profileImages.push(url);

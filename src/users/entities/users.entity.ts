@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from 'typeorm';
+import { Student } from 'src/students/entities/student.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  BaseEntity,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
 
 @Entity({})
 export class User extends BaseEntity {
@@ -52,4 +60,12 @@ export class User extends BaseEntity {
 
   @Column('simple-array', { nullable: true })
   favourites: Array<string>;
+
+  @OneToOne(() => Student, (student) => student.user)
+  @JoinColumn()
+  student: Student;
+
+  // @OneToOne(() => Student, (student) => student.user)
+  // @JoinColumn()
+  // teacher: Student;
 }

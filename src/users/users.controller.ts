@@ -87,12 +87,6 @@ export class UsersController {
     return user;
   }
 
-  @Post('upload')
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
-    console.log(file);
-    return 'hi';
-  }
-
   @UseGuards(RolesGuard)
   @Roles(Role.MANAGER, Role.TEACHER, Role.STUDENT)
   @Get(':id')

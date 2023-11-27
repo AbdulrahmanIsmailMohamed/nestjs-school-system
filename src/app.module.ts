@@ -6,6 +6,11 @@ import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards';
 import { v2 } from 'cloudinary';
+import { StudentsModule } from './students/students.module';
+import { TeachersModule } from './teachers/teachers.module';
+import { ClassesModule } from './classes/classes.module';
+import { StudentModule } from './student/student.module';
+import { StudentsModule } from './students/students.module';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -15,6 +20,10 @@ dotenv.config();
     PostgresModule,
     UsersModule,
     AuthModule,
+    StudentsModule,
+    TeachersModule,
+    ClassesModule,
+    StudentModule,
   ],
   providers: [
     {
