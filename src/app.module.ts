@@ -6,16 +6,31 @@ import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards';
 import { v2 } from 'cloudinary';
-import { StudentsModule } from './students/students.module';
+import { ManagersModule } from './managers/managers.module';
 import { TeachersModule } from './teachers/teachers.module';
 import { ClassesModule } from './classes/classes.module';
-import { StudentModule } from './student/student.module';
 import { StudentsModule } from './students/students.module';
 import * as dotenv from 'dotenv';
+import { MailerModule } from '@nestjs-modules/mailer';
+// import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
 dotenv.config();
 
 @Module({
   imports: [
+    MailerModule.forRoot({
+      transport:
+        'smtps://programabdulrahman@gmail.com:zibkozvfjaahgsqy@smtp.gmail.com',
+      defaults: {
+        from: '"School System" <modules@nestjs.com>',
+      },
+      // template: {
+      //   dir: __dirname + '/templates',
+      //   adapter: new PugAdapter(),
+      //   options: {
+      //     strict: true,
+      //   },
+      // },
+    }),
     ConfigModule.forRoot({ isGlobal: true }),
     PostgresModule,
     UsersModule,
@@ -23,7 +38,7 @@ dotenv.config();
     StudentsModule,
     TeachersModule,
     ClassesModule,
-    StudentModule,
+    ManagersModule,
   ],
   providers: [
     {

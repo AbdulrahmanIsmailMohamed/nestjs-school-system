@@ -9,7 +9,7 @@ export class UpdateRoleOfUserDto {
     manager: Role.MANAGER,
     teacher: Role.TEACHER,
     student: Role.STUDENT,
-    guardian: Role.GUARDIAN,
+    guardian: Role.PARENT,
   })
   role: string;
 }

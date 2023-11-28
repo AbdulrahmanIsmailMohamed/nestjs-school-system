@@ -9,7 +9,7 @@ import { Like, Not, Repository } from 'typeorm';
 import { PaginationDto } from './dtos/pagination.dto';
 import { PaginationResult } from './interfaces/pagination-result.interface';
 import { Crypt } from 'src/utils';
-import { CreateUserDto, UpdateLoggedUserDto } from './dtos';
+import { UpdateLoggedUserDto } from './dtos';
 import { Filters } from './interfaces';
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -20,34 +20,6 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
     private crypt: Crypt,
   ) {}
-
-  /**
-   * @access Manager, Teacher
-   */
-  async createUser(createUserDto: CreateUserDto): Promise<Partial<User>> {
-    const { password, username, email } = createUserDto;
-
-    // Check if username or email already exist
-    const existingUser = await this.userRepository.findOne({
-      where: [{ username }, { email }],
-    });
-    if (existingUser) {
-      throw new BadRequestException('Email or username already exists');
-    }
-
-    const hashPassword = this.crypt.hash(password);
-    delete createUserDto.password;
-
-    const user = await this.userRepository.save(
-      this.userRepository.create({
-        password: hashPassword,
-        ...createUserDto,
-      }),
-    );
-    if (!user) throw new BadRequestException();
-
-    return this.removeSensitiveUserFields(user);
-  }
 
   /**
    * @access manager, student, teacher

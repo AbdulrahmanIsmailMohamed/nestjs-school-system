@@ -1,1 +1,1 @@
-console.log(new Date(Date.now() + 1000 * 60 * 60 * 24));
+console.log(Math.floor(100000 + Math.random() * 900000).toString());

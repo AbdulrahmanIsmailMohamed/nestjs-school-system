@@ -8,19 +8,31 @@ import {
   JoinColumn,
 } from 'typeorm';
 
-@Entity({})
+@Entity({ name: 'users' })
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @Column({ nullable: true })
   email: string;
+
+  @Column({ nullable: true })
+  name: string;
 
   @Column({ unique: true })
   username: string;
 
   @Column()
   password: string;
+
+  @Column({ nullable: true })
+  newPassword: string;
+
+  @Column({ nullable: true })
+  emailConfirmCodeExpire: number;
+
+  @Column({ nullable: true })
+  emailConfirmCode: string;
 
   @Column({ nullable: true })
   passwordResetCode: string;
@@ -34,8 +46,11 @@ export class User extends BaseEntity {
   @Column('simple-array', { default: 'student' })
   role: Array<string>;
 
-  @Column({ default: false, nullable: true })
+  @Column({ default: false })
   ban: boolean;
+
+  @Column({ default: false })
+  confirm: boolean;
 
   @Column('date', { nullable: true })
   banDate: Date;
@@ -43,7 +58,7 @@ export class User extends BaseEntity {
   @Column({ default: 0 })
   limit: number;
 
-  @Column()
+  @Column({ nullable: true })
   country: string;
 
   @Column({ nullable: true })

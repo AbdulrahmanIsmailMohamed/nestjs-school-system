@@ -21,7 +21,7 @@ import { User } from './entities/users.entity';
 import { RolesGuard } from 'src/auth/guards';
 import { Roles } from 'src/auth/decorators';
 import { Role } from 'src/common/enums/role.enum';
-import { CreateUserDto, PaginationDto, UpdateRoleOfUserDto } from './dtos';
+import { PaginationDto, UpdateRoleOfUserDto } from './dtos';
 import { AuthenticatedRequest, PaginationResult } from './interfaces';
 import { UpdateLoggedUserDto } from './dtos/update-logged-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -29,20 +29,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 @Controller('users')
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
-
-  @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER, Role.TEACHER)
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  async createUser(
-    @Body() createUserDto: CreateUserDto,
-  ): Promise<Partial<User>> {
-    console.log(createUserDto);
-
-    const user = await this.userService.createUser(createUserDto);
-    if (!user) throw new BadRequestException(`occur error while save user`);
-    return user;
-  }
 
   @UseGuards(RolesGuard)
   @Roles(Role.MANAGER, Role.TEACHER)
@@ -58,7 +44,7 @@ export class UsersController {
   }
 
   @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER, Role.TEACHER, Role.STUDENT, Role.GUARDIAN)
+  @Roles(Role.MANAGER, Role.TEACHER, Role.STUDENT, Role.PARENT)
   @Get('me')
   async getMe(@Request() req: AuthenticatedRequest): Promise<Partial<User>> {
     const user = await this.userService.getMe(req.user.id);
@@ -68,7 +54,7 @@ export class UsersController {
   }
 
   @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER, Role.TEACHER, Role.STUDENT, Role.GUARDIAN)
+  @Roles(Role.MANAGER, Role.TEACHER, Role.STUDENT, Role.PARENT)
   @UseInterceptors(FileInterceptor('profileImage'))
   @Patch('me')
   async updateLoggedUser(
