@@ -22,13 +22,6 @@ dotenv.config();
       defaults: {
         from: '"School System" <modules@nestjs.com>',
       },
-      // template: {
-      //   dir: __dirname + '/templates',
-      //   adapter: new PugAdapter(),
-      //   options: {
-      //     strict: true,
-      //   },
-      // },
     }),
     ConfigModule.forRoot({ isGlobal: true }),
     PostgresModule,
