@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from 'src/users/entities/users.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -44,6 +48,36 @@ export class ManagersService {
     if (!user) throw new BadRequestException();
 
     return this.removeSensitiveUserFields(user);
+  }
+
+  /**
+   * @access Manager
+   */
+  async updateRoleOfUser(userId: number, role: any): Promise<string> {
+    const user = await this.userRepository.update({ id: userId }, role);
+    if (user.affected === 0) throw new NotFoundException();
+
+    return 'Done';
+  }
+
+  /**
+   * @access Manager
+   */
+  async deleteUser(userId: number): Promise<string> {
+    const user = await this.userRepository.delete({ id: userId });
+    if (user.affected === 0) throw new NotFoundException();
+
+    return 'done';
+  }
+
+  async inactiveUser(userId: number): Promise<string> {
+    const user = await this.userRepository.update(
+      { id: userId },
+      { active: false },
+    );
+    if (user.affected === 0) throw new NotFoundException();
+
+    return 'Done';
   }
 
   private removeSensitiveUserFields(user: any): Partial<User> {

@@ -2,14 +2,10 @@ import {
   BadRequestException,
   Body,
   Controller,
-  Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   NotFoundException,
   Param,
   Patch,
-  Post,
   Query,
   Request,
   UploadedFile,
@@ -21,7 +17,7 @@ import { User } from './entities/users.entity';
 import { RolesGuard } from 'src/auth/guards';
 import { Roles } from 'src/auth/decorators';
 import { Role } from 'src/common/enums/role.enum';
-import { PaginationDto, UpdateRoleOfUserDto } from './dtos';
+import { PaginationDto } from './dtos';
 import { AuthenticatedRequest, PaginationResult } from './interfaces';
 import { UpdateLoggedUserDto } from './dtos/update-logged-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -36,8 +32,13 @@ export class UsersController {
   async getUsers(
     @Query() paginationDto: PaginationDto,
     @Query('keyword') keyword: string,
+    @Request() req: AuthenticatedRequest,
   ): Promise<PaginationResult> {
-    const users = await this.userService.getUsers(paginationDto, keyword);
+    const users = await this.userService.getUsers(
+      paginationDto,
+      keyword,
+      req.user.id,
+    );
     if (!users) throw new NotFoundException();
 
     return users;
@@ -47,7 +48,7 @@ export class UsersController {
   @Roles(Role.MANAGER, Role.TEACHER, Role.STUDENT, Role.PARENT)
   @Get('me')
   async getMe(@Request() req: AuthenticatedRequest): Promise<Partial<User>> {
-    const user = await this.userService.getMe(req.user.id);
+    const user = await this.userService.getUser(req.user.id);
     if (!user) throw new NotFoundException();
 
     return user;
@@ -79,42 +80,6 @@ export class UsersController {
   async getUser(@Param('id') id: number): Promise<User> {
     const user = await this.userService.getUser(id);
     if (!user) throw new NotFoundException();
-
-    return user;
-  }
-
-  @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER)
-  @HttpCode(HttpStatus.OK)
-  @Patch(':id')
-  async updateRoleOfUser(
-    @Param('id') id: number,
-    @Body() role: UpdateRoleOfUserDto,
-  ): Promise<string> {
-    const user = await this.userService.updateRoleOfUser(id, role);
-    if (!user) throw new NotFoundException();
-
-    return user;
-  }
-
-  @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER)
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @Delete(':id')
-  async deleteUser(@Param('id') id: number): Promise<string> {
-    const user = await this.userService.deleteUser(id);
-    if (!user) throw new NotFoundException();
-
-    return user;
-  }
-
-  @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER)
-  @HttpCode(HttpStatus.OK)
-  @Patch('active/:id')
-  async inactiveUser(@Param('id') id: number): Promise<string> {
-    const user = await this.userService.inactiveUser(id);
-    if (!user) throw new BadRequestException();
 
     return user;
   }

@@ -5,10 +5,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/users.entity';
-import { Like, Not, Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { PaginationDto } from './dtos/pagination.dto';
 import { PaginationResult } from './interfaces/pagination-result.interface';
-import { Crypt } from 'src/utils';
 import { UpdateLoggedUserDto } from './dtos';
 import { Filters } from './interfaces';
 import { v2 as cloudinary } from 'cloudinary';
@@ -18,13 +17,14 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private crypt: Crypt,
   ) {}
 
   /**
    * @access manager, student, teacher
    */
   async getMe(userId: number): Promise<Partial<User>> {
+    console.log(userId);
+
     const user = await this.userRepository.findOneBy({ id: userId });
     if (!user) {
       throw new NotFoundException(`${userId} not found`);
@@ -38,7 +38,7 @@ export class UsersService {
    */
   async getUser(userId: number): Promise<User> {
     const user = await this.userRepository.findOne({
-      where: { id: userId, role: Not('manager') },
+      where: { id: userId, active: true, confirm: true },
       select: {
         id: true,
         username: true,
@@ -62,8 +62,9 @@ export class UsersService {
   async getUsers(
     paginationDto: PaginationDto,
     keyword: string,
+    userId: number,
   ): Promise<PaginationResult> {
-    const users = await this.paginate(paginationDto, keyword);
+    const users = await this.paginate(paginationDto, keyword, userId);
     if (!users) throw new NotFoundException();
 
     return users;
@@ -94,64 +95,64 @@ export class UsersService {
     return 'Done';
   }
 
-  /**
-   * @access Manager
-   */
-  async updateRoleOfUser(userId: number, role: any): Promise<string> {
-    const user = await this.userRepository.update({ id: userId }, role);
-    if (user.affected === 0) throw new NotFoundException();
-
-    return 'Done';
-  }
-
-  /**
-   * @access Manager
-   */
-  async deleteUser(userId: number): Promise<string> {
-    const user = await this.userRepository.delete({ id: userId });
-    if (user.affected === 0) throw new NotFoundException();
-
-    return 'done';
-  }
-
-  async inactiveUser(userId: number): Promise<string> {
-    const user = await this.userRepository.update(
-      { id: userId },
-      { active: false },
-    );
-    if (user.affected === 0) throw new NotFoundException();
-
-    return 'Done';
-  }
-
-  private async paginate(paginationDto: PaginationDto, keyword: string) {
+  private async paginate(
+    paginationDto: PaginationDto,
+    keyword: string,
+    userId: number,
+  ) {
     const { limit, page } = paginationDto;
 
     const skip = (page - 1) * limit;
     const endIndex: number = page * limit;
 
-    const filters: Filters = { active: true, role: Not('manager') };
-    if (keyword) filters.username = Like(`${keyword}`);
+    const filters: Filters = {
+      id: Not(userId),
+      active: true,
+      role: Not('manager'),
+      confirm: true,
+    };
+    const query = this.userRepository.createQueryBuilder('user');
+    if (keyword) {
+      query.andWhere(
+        '(user.username LIKE :keyword OR user.name LIKE :keyword)',
+        { keyword: `%${keyword}%` },
+      );
+    }
 
-    const users = await this.userRepository.find({
-      where: filters,
-      skip: skip,
-      take: limit,
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        country: true,
-        city: true,
-        profileImage: true,
-        profileImages: true,
-      },
-    });
+    const users = await query
+      .andWhere(filters)
+      .skip(skip)
+      .take(limit)
+      .select([
+        'user.id',
+        'user.username',
+        'user.name',
+        'user.email',
+        'user.country',
+        'user.city',
+        'user.profileImage',
+        'user.profileImages',
+      ])
+      .getMany();
+
     if (!users) throw new NotFoundException();
 
-    const countDocumnet = await this.userRepository.count({
-      where: filters,
-    });
+    const countDocumnet = await query
+      .andWhere(filters)
+      .skip(skip)
+      .take(limit)
+      .select([
+        'user.id',
+        'user.username',
+        'user.name',
+        'user.email',
+        'user.country',
+        'user.city',
+        'user.profileImage',
+        'user.profileImages',
+      ])
+      .getCount();
+
     const paginationResult: PaginationResult = {
       data: users,
       page,

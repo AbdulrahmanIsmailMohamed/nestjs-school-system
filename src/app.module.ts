@@ -18,8 +18,7 @@ dotenv.config();
 @Module({
   imports: [
     MailerModule.forRoot({
-      transport:
-        'smtps://programabdulrahman@gmail.com:zibkozvfjaahgsqy@smtp.gmail.com',
+      transport: `smtps://${process.env.MAILRE_USER}:${process.env.MAILRE_PASS}@${process.env.MAILRE_HOST}`,
       defaults: {
         from: '"School System" <modules@nestjs.com>',
       },

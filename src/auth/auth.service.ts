@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Like, MoreThan, Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { MailerService } from '@nestjs-modules/mailer';
 import { User } from 'src/users/entities/users.entity';
@@ -44,9 +44,36 @@ export class AuthService {
       throw new UnauthorizedException(`Invalid email or password`);
     }
 
-    this.updateUserData(user, registerDto);
-
-    return await this.confirmEmail(user);
+    if (user.ban === false) {
+      if (user.limit < 4) {
+        this.updateUserData(user, registerDto);
+        return await this.confirmEmail(user);
+      } else {
+        user.ban = true;
+        user.banDate = (Date.now() + 1000 * 60 * 60 * 24).toString();
+        user.limit = 0;
+        await user.save();
+        throw new BadRequestException(
+          `Too much request please register after ${new Date(
+            parseInt(user.banDate),
+          ).getHours()} hours`,
+        );
+      }
+    } else {
+      if (parseInt(user.banDate) < Date.now()) {
+        user.ban = false;
+        user.banDate = undefined;
+        await user.save();
+        this.updateUserData(user, registerDto);
+        return await this.confirmEmail(user);
+      } else {
+        throw new BadRequestException(
+          `Too much request please register after ${new Date(
+            parseInt(user.banDate),
+          ).getHours()} hours`,
+        );
+      }
+    }
   }
 
   async login(loginDto: LoginDto): Promise<string> {
@@ -64,30 +91,21 @@ export class AuthService {
   async verifyEmailConfirmCode(emailConfirmCodeDto: EmailConfirmCodeDto) {
     const { email, confirmCode } = emailConfirmCodeDto;
 
-    const user = await this.userRepository.findOne({
-      where: {
-        email,
-        emailConfirmCode: this.hashCode(confirmCode),
-        emailConfirmCodeExpire: MoreThan(Date.now().toString()),
-        confirm: false,
-        active: true,
-      },
-      // select: {
-      //   confirm: true,
-      //   emailConfirmCode: true,
-      //   emailConfirmCodeExpire: true,
-      // },
+    const user = await this.userRepository.findOneBy({
+      email,
+      emailConfirmCode: this.hashCode(confirmCode),
+      emailConfirmCodeExpire: MoreThan(Date.now().toString()),
+      confirm: false,
+      active: true,
+      ban: false,
     });
     if (!user) throw new BadRequestException(`Invalid email or confirm code`);
-
-    console.log(user);
 
     user.confirm = true;
     user.emailConfirmCode = undefined;
     user.emailConfirmCodeExpire = undefined;
     await user.save();
 
-    console.log(user);
     return `Your email confirmed successfully, now you can login`;
   }
 
@@ -95,6 +113,7 @@ export class AuthService {
     const confirmCode = generateRandomCode();
     user.emailConfirmCode = this.hashCode(confirmCode);
     user.emailConfirmCodeExpire = (Date.now() + 1000 * 60 * 10).toString(); // expire after 10 minutes
+    user.limit += 1;
     await user.save();
 
     const message = `

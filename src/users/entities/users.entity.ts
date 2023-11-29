@@ -52,8 +52,8 @@ export class User extends BaseEntity {
   @Column({ default: false })
   confirm: boolean;
 
-  @Column('date', { nullable: true })
-  banDate: Date;
+  @Column({ nullable: true })
+  banDate: string;
 
   @Column({ default: 0 })
   limit: number;
