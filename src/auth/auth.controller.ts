@@ -10,6 +10,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dtos/login.dto';
 import { Public } from './decorators';
 import { RegisterDto } from './dtos/register.dto';
+import { EmailConfirmCodeDto } from './dtos';
 
 @Controller('auth')
 export class AuthController {
@@ -20,6 +21,18 @@ export class AuthController {
   async register(@Body() registerDto: RegisterDto): Promise<string> {
     const user = await this.authService.register(registerDto);
     if (!user) throw new BadRequestException();
+
+    return user;
+  }
+
+  @Public()
+  @Post('/confirm-code')
+  async vrerifyEmailConfirmCode(
+    @Body() emailConfirmCodeDto: EmailConfirmCodeDto,
+  ) {
+    const user =
+      await this.authService.verifyEmailConfirmCode(emailConfirmCodeDto);
+    // if (!user) throw new BadRequestException();
 
     return user;
   }

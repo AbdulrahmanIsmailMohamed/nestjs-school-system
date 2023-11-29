@@ -29,7 +29,7 @@ export class User extends BaseEntity {
   newPassword: string;
 
   @Column({ nullable: true })
-  emailConfirmCodeExpire: number;
+  emailConfirmCodeExpire: string;
 
   @Column({ nullable: true })
   emailConfirmCode: string;
@@ -38,7 +38,7 @@ export class User extends BaseEntity {
   passwordResetCode: string;
 
   @Column({ nullable: true })
-  passwordResetCodeExpire: number;
+  passwordResetCodeExpire: string;
 
   @Column({ nullable: true })
   passwordResetVerified: boolean;
