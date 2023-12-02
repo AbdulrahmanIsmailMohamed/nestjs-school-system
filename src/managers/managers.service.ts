@@ -80,16 +80,34 @@ export class ManagersService {
     keyword: string,
     userId: number,
   ) {
-    const proginationResult = await this.pagination.paginate(
+    const paginationResult = await this.pagination.paginate(
       paginationDto,
       keyword,
       userId,
       false,
     );
-    if (!proginationResult.data)
+    if (!paginationResult.data)
       throw new BadRequestException(`Not found inactive users`);
 
-    return proginationResult;
+    return paginationResult;
+  }
+
+  async getUnconfirmedUsers(
+    paginationDto: PaginationDto,
+    keyword: string,
+    userId: number,
+  ) {
+    const paginationResult = await this.pagination.paginate(
+      paginationDto,
+      keyword,
+      userId,
+      true,
+      false,
+    );
+    if (!paginationResult.data)
+      throw new BadRequestException(`Not found Unconfirmed users`);
+
+    return [paginationResult];
   }
 
   async inactiveUser(userId: number): Promise<string> {

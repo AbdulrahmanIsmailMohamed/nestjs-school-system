@@ -37,7 +37,26 @@ export class ManagersController {
   @UseGuards(RolesGuard)
   @Roles(Role.MANAGER)
   @HttpCode(HttpStatus.OK)
-  @Get()
+  @Get('/unconfirmed')
+  async getUnconfirmedUsers(
+    @Query() paginationDto: PaginationDto,
+    @Query('keyword') keyword: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    const data = await this.managersService.getUnconfirmedUsers(
+      paginationDto,
+      keyword,
+      req.user.id,
+    );
+    if (!data) throw new BadRequestException();
+
+    return data;
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.MANAGER)
+  @HttpCode(HttpStatus.OK)
+  @Get('inactive')
   async getInactiveUsers(
     @Query() paginationDto: PaginationDto,
     @Query('keyword') keyword: string,
@@ -51,17 +70,6 @@ export class ManagersController {
     if (!data) throw new BadRequestException();
 
     return data;
-  }
-
-  @UseGuards(RolesGuard)
-  @Roles(Role.MANAGER)
-  @HttpCode(HttpStatus.OK)
-  @Patch(':id')
-  async inactiveUser(@Param('id') id: number): Promise<string> {
-    const user = await this.managersService.inactiveUser(id);
-    if (!user) throw new BadRequestException();
-
-    return user;
   }
 
   @UseGuards(RolesGuard)
@@ -85,6 +93,17 @@ export class ManagersController {
   ): Promise<string> {
     const user = await this.managersService.updateRoleOfUser(id, role);
     if (!user) throw new NotFoundException();
+
+    return user;
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.MANAGER)
+  @HttpCode(HttpStatus.OK)
+  @Patch('inactive/:id')
+  async inactiveUser(@Param('id') id: number): Promise<string> {
+    const user = await this.managersService.inactiveUser(id);
+    if (!user) throw new BadRequestException();
 
     return user;
   }

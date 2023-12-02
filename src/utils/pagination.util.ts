@@ -15,6 +15,7 @@ export class Pagination {
     keyword: string,
     userId: number,
     active: boolean = true,
+    confirm: boolean = true,
   ) {
     const { limit, page } = paginationDto;
 
@@ -25,7 +26,7 @@ export class Pagination {
       id: Not(userId),
       active,
       role: Not('manager'),
-      confirm: true,
+      confirm,
     };
     const query = this.userRepository.createQueryBuilder('user');
     if (keyword) {
