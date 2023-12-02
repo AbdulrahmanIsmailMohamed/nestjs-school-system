@@ -8,13 +8,15 @@ import { User } from 'src/users/entities/users.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Crypt } from '../utils/hashPassword';
-import { generateRandomCode } from 'src/utils';
+import { Pagination, generateRandomCode } from 'src/utils';
+import { PaginationDto } from 'src/users/dtos';
 
 @Injectable()
 export class ManagersService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     private crypt: Crypt,
+    private pagination: Pagination,
   ) {}
 
   /**
@@ -54,7 +56,10 @@ export class ManagersService {
    * @access Manager
    */
   async updateRoleOfUser(userId: number, role: any): Promise<string> {
-    const user = await this.userRepository.update({ id: userId }, role);
+    const user = await this.userRepository.update(
+      { id: userId, confirm: true },
+      role,
+    );
     if (user.affected === 0) throw new NotFoundException();
 
     return 'Done';
@@ -68,6 +73,23 @@ export class ManagersService {
     if (user.affected === 0) throw new NotFoundException();
 
     return 'done';
+  }
+
+  async getInactiveUsers(
+    paginationDto: PaginationDto,
+    keyword: string,
+    userId: number,
+  ) {
+    const proginationResult = await this.pagination.paginate(
+      paginationDto,
+      keyword,
+      userId,
+      false,
+    );
+    if (!proginationResult.data)
+      throw new BadRequestException(`Not found inactive users`);
+
+    return proginationResult;
   }
 
   async inactiveUser(userId: number): Promise<string> {

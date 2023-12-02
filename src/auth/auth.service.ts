@@ -117,7 +117,7 @@ export class AuthService {
     await user.save();
 
     const message = `
-      <h2>Hi ${user.username}</h2>
+      <h2>Hi ${user.name}</h2>
       <p>We received a request to confirm the email on your school system Account.</p>
       <h3>${confirmCode}</h3>
       <p>Enter this code to complete the confirm</p>

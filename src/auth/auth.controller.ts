@@ -26,13 +26,14 @@ export class AuthController {
   }
 
   @Public()
+  @HttpCode(HttpStatus.OK)
   @Post('/confirm-code')
   async vrerifyEmailConfirmCode(
     @Body() emailConfirmCodeDto: EmailConfirmCodeDto,
   ) {
     const user =
       await this.authService.verifyEmailConfirmCode(emailConfirmCodeDto);
-    // if (!user) throw new BadRequestException();
+    if (!user) throw new BadRequestException();
 
     return user;
   }
@@ -41,8 +42,6 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('/login')
   async login(@Body() loginDto: LoginDto) {
-    console.log('gi');
-
     const user = await this.authService.login(loginDto);
     if (!user) throw new BadRequestException();
 

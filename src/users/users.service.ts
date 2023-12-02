@@ -5,18 +5,19 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/users.entity';
-import { Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { PaginationDto } from './dtos/pagination.dto';
 import { PaginationResult } from './interfaces/pagination-result.interface';
 import { UpdateLoggedUserDto } from './dtos';
-import { Filters } from './interfaces';
 import { v2 as cloudinary } from 'cloudinary';
+import { Pagination } from 'src/utils';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private pagination: Pagination,
   ) {}
 
   /**
@@ -64,10 +65,14 @@ export class UsersService {
     keyword: string,
     userId: number,
   ): Promise<PaginationResult> {
-    const users = await this.paginate(paginationDto, keyword, userId);
-    if (!users) throw new NotFoundException();
+    const proginationResult = await this.pagination.paginate(
+      paginationDto,
+      keyword,
+      userId,
+    );
+    if (!proginationResult) throw new NotFoundException();
 
-    return users;
+    return proginationResult;
   }
 
   async updateLoggedUser(
@@ -93,75 +98,6 @@ export class UsersService {
     }
 
     return 'Done';
-  }
-
-  private async paginate(
-    paginationDto: PaginationDto,
-    keyword: string,
-    userId: number,
-  ) {
-    const { limit, page } = paginationDto;
-
-    const skip = (page - 1) * limit;
-    const endIndex: number = page * limit;
-
-    const filters: Filters = {
-      id: Not(userId),
-      active: true,
-      role: Not('manager'),
-      confirm: true,
-    };
-    const query = this.userRepository.createQueryBuilder('user');
-    if (keyword) {
-      query.andWhere(
-        '(user.username LIKE :keyword OR user.name LIKE :keyword)',
-        { keyword: `%${keyword}%` },
-      );
-    }
-
-    const users = await query
-      .andWhere(filters)
-      .skip(skip)
-      .take(limit)
-      .select([
-        'user.id',
-        'user.username',
-        'user.name',
-        'user.email',
-        'user.country',
-        'user.city',
-        'user.profileImage',
-        'user.profileImages',
-      ])
-      .getMany();
-
-    if (!users) throw new NotFoundException();
-
-    const countDocumnet = await query
-      .andWhere(filters)
-      .skip(skip)
-      .take(limit)
-      .select([
-        'user.id',
-        'user.username',
-        'user.name',
-        'user.email',
-        'user.country',
-        'user.city',
-        'user.profileImage',
-        'user.profileImages',
-      ])
-      .getCount();
-
-    const paginationResult: PaginationResult = {
-      data: users,
-      page,
-      limit,
-    };
-    if (endIndex < countDocumnet) paginationResult.nextPage = page + 1;
-    if (skip > 0) paginationResult.previousPage = page - 1;
-
-    return paginationResult;
   }
 
   private removeSensitiveUserFields(user: any): Partial<User> {

@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/users.entity';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
-import { Crypt } from 'src/utils';
+import { Crypt, Pagination } from 'src/utils';
 import { MulterModule } from '@nestjs/platform-express';
 import * as multer from 'multer';
 @Module({
@@ -29,6 +29,6 @@ import * as multer from 'multer';
     TypeOrmModule.forFeature([User]),
   ],
   controllers: [UsersController],
-  providers: [UsersService, Crypt],
+  providers: [UsersService, Crypt, Pagination],
 })
 export class UsersModule {}
