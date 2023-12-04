@@ -54,7 +54,7 @@ export class Pagination {
 
     if (!users) throw new NotFoundException();
 
-    const countDocumnet = await query
+    const countDocument = await query
       .andWhere(filters)
       .skip(skip)
       .take(limit)
@@ -74,8 +74,9 @@ export class Pagination {
       data: users,
       page,
       limit,
+      countDocument,
     };
-    if (endIndex < countDocumnet) paginationResult.nextPage = page + 1;
+    if (endIndex < countDocument) paginationResult.nextPage = page + 1;
     if (skip > 0) paginationResult.previousPage = page - 1;
 
     return paginationResult;

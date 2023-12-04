@@ -101,8 +101,8 @@ export class ManagersController {
   @Roles(Role.MANAGER)
   @HttpCode(HttpStatus.OK)
   @Patch('inactive/:id')
-  async inactiveUser(@Param('id') id: number): Promise<string> {
-    const user = await this.managersService.inactiveUser(id);
+  async inactiveOrActiveUser(@Param('id') id: number): Promise<string> {
+    const user = await this.managersService.inactiveOrActiveUser(id);
     if (!user) throw new BadRequestException();
 
     return user;

@@ -110,12 +110,12 @@ export class ManagersService {
     return [paginationResult];
   }
 
-  async inactiveUser(userId: number): Promise<string> {
-    const user = await this.userRepository.update(
-      { id: userId },
-      { active: false },
-    );
-    if (user.affected === 0) throw new NotFoundException();
+  async inactiveOrActiveUser(userId: number): Promise<string> {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) throw new NotFoundException();
+
+    user.active ? (user.active = false) : (user.active = true);
+    await user.save();
 
     return 'Done';
   }
