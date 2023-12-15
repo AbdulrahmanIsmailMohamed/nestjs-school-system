@@ -21,7 +21,7 @@ export class UsersService {
   ) {}
 
   /**
-   * @access manager, student, teacher
+   * @access manager, student, teacher, parent
    */
   async getMe(userId: number): Promise<Partial<User>> {
     console.log(userId);
