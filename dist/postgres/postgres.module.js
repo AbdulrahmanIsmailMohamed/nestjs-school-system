@@ -22,14 +22,11 @@ exports.PostgresModule = PostgresModule = __decorate([
             typeorm_1.TypeOrmModule.forRootAsync({
                 imports: [config_1.ConfigModule],
                 useFactory: async (configService) => ({
+                    url: configService.get('DB_URL'),
                     type: 'postgres',
-                    host: 'localhost',
-                    port: 5433,
-                    username: configService.get('DB_USERNAME'),
-                    password: configService.get('DB_PASSWORD'),
-                    database: configService.get('DB_DATABASE'),
                     entities: [users_entity_1.User, student_entity_1.Student],
                     synchronize: true,
+                    ssl: true,
                 }),
                 inject: [config_1.ConfigService],
             }),

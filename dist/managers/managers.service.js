@@ -67,6 +67,7 @@ let ManagersService = class ManagersService {
     }
     async getUnconfirmedUsers(paginationDto, keyword, userId) {
         const paginationResult = await this.pagination.paginate(paginationDto, keyword, userId, true, false);
+        console.log(paginationResult);
         if (!paginationResult.data)
             throw new common_1.BadRequestException(`Not found Unconfirmed users`);
         return [paginationResult];
