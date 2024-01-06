@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Student } from 'src/students/entities/student.entity';
 import { User } from 'src/users/entities/users.entity';
 
-@Module({
+@Module({ 
   imports: [
     ConfigModule,
     TypeOrmModule.forRootAsync({
